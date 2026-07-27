@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SpeechSense — Voice Biometrics Dashboard</title>
+<meta name="description" content="Robust Voice Recognition &amp; Biometrics Dashboard by Ishtiaq Ahmed.">
+<link rel="icon" href="/static/assets/logo.png" type="image/png">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══════════════════ NAVBAR ═══════════════════ -->
+  <nav class="navbar">
+    <a class="nav-brand" href="/">
+      <img src="/static/assets/logo.png" alt="">
+      <span>
+        <span class="nav-brand-text">SpeechSense</span>
+        <span class="nav-brand-sub">by Ishtiaq Ahmed</span>
+      </span>
+    </a>
+
+    <div class="nav-links" role="tablist">
+      <button class="nav-link is-active" data-page="dashboard" role="tab" aria-selected="true">
+        <img src="/static/assets/icon_analytics.png" alt="">Dashboard
+      </button>
+      <button class="nav-link" data-page="studio" role="tab" aria-selected="false">
+        <img src="/static/assets/icon_mic.png" alt="">Voice Studio
+      </button>
+      <button class="nav-link" data-page="employees" role="tab" aria-selected="false">
+        <img src="/static/assets/icon_shield.png" alt="">Employees
+      </button>
+    </div>
+
+    <div class="nav-right">
+      <button class="btn btn-ghost btn-sm" id="apiKeyBtn" title="Set the X-API-Key header sent with every request">
+        🔑 <span id="apiKeyState">No key</span>
+      </button>
+      <span class="status-pill" id="statusPill" role="status" aria-live="polite">
+        <span class="dot"></span><span id="statusText">Connecting…</span>
+      </span>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════ MAIN ═══════════════════ -->
+  <main class="main">
+
+    <!-- ────────────── DASHBOARD ────────────── -->
+    <section class="page is-active" id="page-dashboard">
+      <header class="section-header">
+        <h1 class="section-title">
+          <img src="/static/assets/icon_analytics.png" alt="">Analytics Overview
+        </h1>
+        <p class="section-desc">Real-time voice biometrics engine metrics and live speaker events.</p>
+      </header>
+
+      <div class="stats-row">
+        <article class="glass-card stat-card">
+          <div class="stat-head">
+            <span class="stat-label">Enrolled Profiles</span>
+            <img class="stat-icon" src="/static/assets/icon_shield.png" alt="">
+          </div>
+          <div class="stat-value" id="statSpeakers">0</div>
+          <div class="stat-sub" id="statSpeakersChange">Loading profiles…</div>
+        </article>
+
+        <article class="glass-card stat-card">
+          <div class="stat-head">
+            <span class="stat-label">Total Operations</span>
+            <img class="stat-icon" src="/static/assets/icon_analytics.png" alt="">
+          </div>
+          <div class="stat-value" id="statOperations">0</div>
+          <div class="stat-sub">Session query count</div>
+        </article>
+
+        <article class="glass-card stat-card">
+          <div class="stat-head">
+            <span class="stat-label">Match Rate</span>
+            <img class="stat-icon" src="/static/assets/icon_mic.png" alt="">
+          </div>
+          <div class="stat-value" id="statMatchRate">—</div>
+          <div class="stat-sub" id="statMatchRateLabel">0 matched / 0 failed</div>
+        </article>
+
+        <article class="glass-card stat-card">
+          <div class="stat-head">
+            <span class="stat-label">Avg Confidence</span>
+            <img class="stat-icon" src="/static/assets/logo.png" alt="">
+          </div>
+          <div class="stat-value" id="statConfidence">—</div>
+          <div class="stat-sub" id="statBackend">Backend: loading…</div>
+        </article>
+      </div>
+
+      <div class="grid-2 mb-lg">
+        <article class="glass-card">
+          <div class="card-head">
+            <h2 class="card-title">
+              <img src="/static/assets/icon_shield.png" alt="">Enrolled Voice Profiles
+            </h2>
+            <button class="btn btn-ghost btn-sm" id="refreshSpeakersBtn">Refresh</button>
+          </div>
+          <div class="card-body" id="speakersList">
+            <p class="empty">No speakers enrolled yet.</p>
+          </div>
+        </article>
+
+        <article class="glass-card">
+          <div class="card-head">
+            <h2 class="card-title">
+              <img src="/static/assets/icon_analytics.png" alt="">Live Activity Feed
+            </h2>
+            <span class="muted-sm" id="feedCount">0 events</span>
+          </div>
+          <div class="card-body scroll-y" id="activityFeed">
+            <p class="empty">No recent events.</p>
+          </div>
+        </article>
+      </div>
+
+      <article class="glass-card">
+        <div class="card-head">
+          <h2 class="card-title">
+            <img src="/static/assets/logo.png" alt="">Engine &amp; System Parameters
+          </h2>
+          <button class="btn btn-ghost btn-sm" id="reloadDbBtn">↻ Reload DB</button>
+        </div>
+        <div class="card-body">
+          <dl class="config-grid">
+            <div><dt>Embedding Model</dt><dd id="cfgBackend">—</dd></div>
+            <div><dt>Sample Rate</dt><dd id="cfgSampleRate">—</dd></div>
+            <div><dt>Similarity Cutoff</dt><dd id="cfgThreshold">—</dd></div>
+            <div><dt>Margin Threshold</dt><dd id="cfgMargin">—</dd></div>
+            <div><dt>VAD Engine</dt><dd id="cfgVAD">—</dd></div>
+            <div><dt>Uptime</dt><dd id="cfgUptime">—</dd></div>
+          </dl>
+        </div>
+      </article>
+    </section>
+
+    <!-- ────────────── VOICE STUDIO ────────────── -->
+    <section class="page" id="page-studio">
+      <header class="section-header">
+        <h1 class="section-title">
+          <img src="/static/assets/icon_mic.png" alt="">Voice Studio &amp; Analysis
+        </h1>
+        <p class="section-desc">Record live speech samples, verify identities, or enroll new voice patterns.</p>
+      </header>
+
+      <div class="grid-2">
+        <div>
+          <article class="glass-card mb-lg">
+            <div class="card-head">
+              <h2 class="card-title">📋 Phonetic Teleprompter</h2>
+              <div class="btn-row">
+                <button class="btn btn-ghost btn-sm" id="prevPromptBtn" aria-label="Previous prompt">←</button>
+                <button class="btn btn-ghost btn-sm" id="nextPromptBtn" aria-label="Next prompt">→</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="prompt-box">
+                <span class="prompt-cat" id="promptCat">SECURITY</span>
+                <p class="prompt-text" id="promptText">Loading prompts…</p>
+                <div class="prompt-footer">
+                  <span class="muted-sm" id="promptCounter">— / —</span>
+                  <button class="btn btn-ghost btn-sm" id="copyPromptBtn">Copy Sentence</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="glass-card">
+            <div class="card-head">
+              <h2 class="card-title">🎙️ Audio Acquisition</h2>
+              <div class="btn-row" role="group" aria-label="Mode">
+                <button class="btn btn-ghost btn-sm is-active" id="modeIdentify" data-mode="identify">Identify</button>
+                <button class="btn btn-ghost btn-sm" id="modeEnroll" data-mode="enroll">Enroll</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="input-group is-hidden" id="enrollNameGroup">
+                <label class="input-label" for="enrollName">Speaker Name / Employee ID</label>
+                <input type="text" class="input" id="enrollName" placeholder="e.g. Ishtiaq_Ahmed" maxlength="128" autocomplete="off">
+              </div>
+
+              <div class="takes is-hidden" id="takesBar" aria-label="Enrollment takes captured">
+                <span class="take-pip"></span><span class="take-pip"></span><span class="take-pip"></span>
+              </div>
+
+              <div class="viz-box">
+                <canvas id="vizCanvas"></canvas>
+                <div class="viz-overlay" id="vizOverlay">Press record and speak clearly</div>
+              </div>
+
+              <div class="btn-row mt-md">
+                <button class="btn btn-record" id="recBtn">
+                  <span aria-hidden="true">●</span> <span id="recLabel">Record</span>
+                </button>
+                <button class="btn btn-glow" id="processBtn" disabled>Analyze Audio</button>
+                <button class="btn btn-ghost" id="resetBtn">Reset</button>
+              </div>
+
+              <button type="button" class="dropzone" id="dropzone">
+                📁 Drag &amp; drop an audio file (WAV / MP3 / FLAC / OGG) or click to browse
+              </button>
+              <input type="file" id="fileInput" accept="audio/*" hidden>
+            </div>
+          </article>
+        </div>
+
+        <article class="glass-card self-start">
+          <div class="card-head">
+            <h2 class="card-title">
+              <img src="/static/assets/icon_shield.png" alt="">Biometric Verification Output
+            </h2>
+          </div>
+          <div class="card-body">
+            <div class="result-panel">
+              <span class="result-badge is-idle" id="resultBadge">Awaiting Audio Input</span>
+              <div class="result-confidence" id="resultConf">—</div>
+              <p class="result-sub">Calibrated Confidence Score</p>
+              <div class="score-bar-track"><div class="score-bar-fill" id="confBar"></div></div>
+              <div class="score-metrics">
+                <span>Cosine Sim: <strong id="resSim">—</strong></span>
+                <span>Margin: <strong id="resMargin">—</strong></span>
+              </div>
+              <p class="result-reason" id="resReason"></p>
+              <div class="scores-list" id="scoresList"></div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ────────────── EMPLOYEES ────────────── -->
+    <section class="page" id="page-employees">
+      <header class="section-header section-header--split">
+        <div>
+          <h1 class="section-title">
+            <img src="/static/assets/icon_shield.png" alt="">Employee Audio Directory
+          </h1>
+          <p class="section-desc">
+            Dataset directory (<code>employees_audio/</code>) with one subfolder per employee.
+          </p>
+        </div>
+        <button class="btn btn-glow btn-lg" id="enrollAllBtn">⚡ Enroll All Employees</button>
+      </header>
+
+      <article class="glass-card">
+        <div class="card-head">
+          <h2 class="card-title">Employee Roster</h2>
+          <button class="btn btn-ghost btn-sm" id="refreshEmployeesBtn">Refresh</button>
+        </div>
+        <div class="card-body" id="empList">
+          <p class="empty">Loading employees…</p>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <strong>SpeechSense</strong> — Robust Voice Biometrics Engine · Engineered by <strong>Ishtiaq Ahmed</strong>
+  </footer>
+</div>
+
+<div class="toast-container" id="toasts" aria-live="polite"></div>
+<script src="/static/app.js" defer></script>
+</body>
+</html>
